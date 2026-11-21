@@ -99,7 +99,7 @@ The webhook receives values in the request body. The AI Sales Agent's workflow t
 
 ## Workflow export scope
 
-The file `workflows/ai-powered-lead-management.json` is an export of the **lead-management component only**. It does not contain the Telegram trigger or the AI Sales Agent nodes because those belong to the separate upstream workflow. A complete reproducible project should include sanitized exports of both workflows.
+The file `workflows/ai-powered-lead-management.json` is an export of the **lead-management component only**. It does not contain the Telegram trigger or the AI Sales Agent nodes because those belong to the separate upstream workflow. The sanitized Telegram AI Sales Agent reference export is available at [workflows/ai-sales-agent-telegram.json](../workflows/ai-sales-agent-telegram.json). The lead-management export remains an older snapshot and must be refreshed before claiming the repository contains a fully reproducible current version of both workflows.
 
 ## Test evidence
 
@@ -112,3 +112,8 @@ The lead-management webhook path was functionally tested on November 21, 2026. T
 - Use least-privilege HubSpot credentials.
 - Keep test/customer data out of public source control.
 - Add error branches, retries, and execution monitoring before production use.
+
+
+## Telegram AI Sales Agent export notes
+
+The exported active path is Telegram Trigger → Edit Fields → AI Agent → Telegram reply. The OpenAI Chat Model, Simple Memory, and Submit Qualified Lead workflow tool are connected to the AI Agent. The `Extract Lead Information` and `Structured Output Parser` nodes are present in the supplied export but are not connected in its connection graph. Also, the tool's configured source value is `website_chatbot`, despite Telegram being the trigger channel. This is preserved as supplied; update it to `telegram` in the live workflow if channel-accurate source attribution is desired. The downstream workflow ID is a placeholder in the public export and must be reselected after import.
