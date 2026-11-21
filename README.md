@@ -71,9 +71,11 @@ See [Architecture](docs/architecture.md) for more detail.
 - [Architecture notes](docs/architecture.md)
 - [Test results](docs/testing-results.md)
 
-### Important note about the workflow export
+### Trigger and export notes
 
-The JSON currently in `workflows/` is an earlier sanitized snapshot and does **not** include all fixes made and verified in the live n8n workflow on November 21, 2026. Use it as a structural reference only, not as the latest tested import. A fresh export from the current n8n workflow is still needed before this repository can offer a fully reproducible import.
+This workflow export contains an HTTP **Webhook** trigger and a **When Executed by Another Workflow** trigger. It does **not** contain a Telegram trigger or Telegram node, so this project is not documented as Telegram-tested. The webhook lead-intake path is the path functionally tested so far.
+
+The JSON currently in `workflows/` is an earlier sanitized snapshot and does **not** include all fixes made and verified in the live n8n workflow on November 21, 2026. Use it as a structural reference only, not as the latest tested import. A fresh sanitized export from the current n8n workflow is still needed before this repository can offer a fully reproducible import.
 
 ## Security
 
