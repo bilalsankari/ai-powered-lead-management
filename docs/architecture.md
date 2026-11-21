@@ -45,7 +45,7 @@ The webhook accepts these fields:
 - `source`
 - `project_timeline`
 
-The exact trigger mapping can differ between webhook input and the n8n sub-workflow trigger. Check the live workflow's Edit Fields mappings when configuring a new instance.
+This workflow includes both a Webhook trigger and a When Executed by Another Workflow trigger. The current Edit Fields expressions in the supplied export read most values from `$json.body.*`, which matches webhook payloads but not the usual top-level input fields from an Execute Workflow trigger. Therefore, the sub-workflow trigger path needs a separate mapping fix and test before it can be described as verified. There are no Telegram nodes in this workflow export.
 
 ## Test evidence
 
