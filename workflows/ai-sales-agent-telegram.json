@@ -1,0 +1,325 @@
+{
+  "name": "AI Sales Agent - Telegram (sanitized reference export)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "LEAD SUBMISSION RULES:\n- Collect the customer's information before submission.\n- Summarize all collected information.\n- Ask the customer to confirm the summary.\n- Do not submit a lead before explicit confirmation.\n- After confirmation, call the Submit Qualified Lead tool exactly once.\n- Pass all collected information to the tool.\n- Do not tell the customer the lead was successfully submitted until the tool confirms success.\n- If submission fails, explain that a representative will need to assist.\n\nConversation Guidelines:\n- Act like a professional, friendly human sales representative.\n- Never ask the customer more than two questions in a single message.\n- Ask questions naturally, one step at a time.\n- Do not request all customer information at the beginning.\n- First understand the customer's service requirements.\n- Ask about project details, expectations, estimated budget, and timeline.\n- Collect name, email, phone number, and company when relevant.\n- Do not ask for information already provided.\n- If the customer has no company, accept that and continue.\n- Be conversational, helpful, and concise.\n- Never invent customer information.\n- Never submit before collecting all required information.\n- Before submitting, summarize the collected information and explicitly ask for confirmation.\n- Only call Submit Qualified Lead after explicit confirmation.\n- After successful submission, inform the customer that their information has been received."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "3c5b15bf-eb76-4671-b2c1-90feaeee3530",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        224
+      ],
+      "id": "557b25ef-3986-47ec-9b86-e5a123920fde",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        576,
+        224
+      ],
+      "id": "79689e22-0ecb-4c1e-857a-c3dbc213d744",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"name\": \"Example Customer\",\n  \"email\": \"customer@example.com\",\n  \"phone\": \"+1 202 555 0147\",\n  \"company\": \"\",\n  \"service_needed\": \"Kitchen renovation\",\n  \"budget\": 15000,\n  \"message\": \"Wants to start next month.\",\n  \"source\": \"website_chatbot\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        560
+      ],
+      "id": "78c1badb-4e20-46a8-8fb0-a771d5551e38",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a lead information extraction assistant for Anderson Home Design.\n\nExtract only information explicitly provided by the customer from the conversation summary. Return name, email, phone, company, service_needed, budget, message, and source. Never invent missing information. Use empty strings for missing text fields and 0 for an unknown budget. Keep project requirements and expected start date in message. Always set source to website_chatbot. Return structured data only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        336
+      ],
+      "id": "500037e4-f262-4464-87dd-ec822766564e",
+      "name": "Extract Lead Information"
+    },
+    {
+      "parameters": {
+        "description": "Submit a customer's lead information to the AI-Powered Lead Management System. Only call after the customer explicitly confirms the final information summary. Required: name, email, phone, service_needed. Optional: company, budget, message. Always use website_chatbot as the source. Never invent missing information. Call only once per confirmed lead.",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_LEAD_MANAGEMENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "AI-Powered Lead Management System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "budget": "={{ $fromAI('budget', `Customer's estimated budget as a number, without currency symbols.`, 'number') }}",
+            "name": "={{ $fromAI('name', `Customer's full name.`, 'string') }}",
+            "email": "={{ $fromAI('email', `Customer's valid email address.`, 'string') }}",
+            "phone": "={{ $fromAI('phone', `Customer's contact phone number, including country code.`, 'string') }}",
+            "company": "={{ $fromAI('company', `Customer's company name. Use N/A for personal projects.`, 'string') }}",
+            "service_needed": "={{ $fromAI('service_needed', `Detailed description of the service requested.`, 'string') }}",
+            "message": "={{ $fromAI('message', `Summary of customer requirements and preferred project timeline.`, 'string') }}",
+            "source": "={{ $fromAI('source', `Lead source. Always use website_chatbot.`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "service_needed",
+              "displayName": "service_needed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        224
+      ],
+      "id": "0df8cb51-b3ed-4c55-9eba-50c96dfbeff2",
+      "name": "Submit Qualified Lead"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6c5fef81-f676-461f-a300-9fb06404fb21",
+      "name": "Telegram Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00db4da0-e76d-4a33-b1c9-1a4cfb433cb7",
+              "name": "chatInput",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "0a8105a4-f151-48cd-8da0-8c777d92668a",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c48b6f7b-f48f-4155-8363-c4b155c9a067",
+              "name": "sessionId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "cd14639f-1ca3-4362-a01e-c987e136fbb2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "a8defc7c-e95e-42eb-b5ab-5cea794a2f8a",
+      "name": "Send a text message"
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Qualified Lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}
