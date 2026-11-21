@@ -4,20 +4,21 @@ An AI-assisted lead intake and CRM automation project built with **n8n**, **Open
 
 The goal is to help businesses process incoming leads more consistently by validating contact data, checking for existing contacts, evaluating lead quality, and keeping CRM records organized.
 
-> **Project status: In development.** This repository documents the project and its current design. It does not yet contain a reviewed, sanitized n8n workflow export.
+> **Project status: In development.** A sanitized workflow export and setup guide are included for review and testing. The export has not been re-tested end-to-end after sanitization and is not production-ready.
 
 ## Overview
 
-The workflow is designed around this lead-processing sequence:
+The current workflow export includes:
 
-1. **Receive a lead** through an n8n webhook.
-2. **Normalize and validate** the submitted fields, including the email address and budget.
-3. **Check for duplicates** in HubSpot using the email address.
-4. **Create or update CRM information** according to the duplicate-check result.
-5. **Use an AI evaluation step** to produce a lead score, priority, and supporting rationale.
-6. **Store relevant qualification details** in HubSpot contact properties.
+1. Lead intake through an n8n webhook or sub-workflow trigger.
+2. Lead field normalization and validation.
+3. HubSpot contact search by email.
+4. Contact create/update handling.
+5. AI-based lead scoring and priority classification.
+6. HubSpot contact-property updates.
+7. Hot/cold email notifications, task creation, and hot-lead deal creation.
 
-The implementation is being developed and tested incrementally. Exact behavior may change as the workflow is refined.
+Some branches and CRM ID mappings still require fixes; see [Known Limitations](docs/setup.md#known-limitations-to-resolve-before-production).
 
 ## Technology Stack
 
@@ -25,76 +26,61 @@ The implementation is being developed and tested incrementally. Exact behavior m
 |---|---|
 | n8n | Workflow orchestration |
 | OpenAI API | AI-assisted lead evaluation |
-| HubSpot CRM | Contact records and qualification properties |
+| HubSpot CRM | Contacts, deals, tasks, and qualification properties |
 | JavaScript | Data normalization and validation |
 | REST APIs / JSON | Service integrations and data exchange |
 | Webhooks | Lead intake |
 
-## Planned Architecture
+## Architecture
 
 ```text
-Lead Source
-    |
-    v
-n8n Webhook
-    |
-    v
-Normalize & Validate Lead
-    |
-    v
-Search HubSpot for Existing Contact
-    |
-    v
-AI Lead Evaluation
-    |
-    v
-Create / Update HubSpot Contact
-    |
-    v
-Save Lead Score, Priority & AI Rationale
+Webhook / Sub-workflow Trigger
+          |
+          v
+     Edit Fields
+          |
+          v
+   Validate Lead
+          |
+          v
+   Search HubSpot
+          |
+          v
+ Create / Update Contact
+          |
+          v
+   OpenAI Evaluation
+          |
+          v
+ Update CRM Properties
+          |
+          v
+ Hot / Warm / Cold Routing
 ```
 
-This diagram describes the intended project flow; implementation details are subject to change.
-
-## Example Lead Data
-
-A lead submission may contain fields such as:
-
-| Field | Description |
-|---|---|
-| name | Contact's full name |
-| email | Contact email used for duplicate matching |
-| company | Company or organization |
-| service_needed | Requested service |
-| budget | Estimated budget |
-| message | Additional context from the lead |
-| source | Where the lead originated |
-
-Do not use real customer information in public examples. Use synthetic data when testing or documenting this project.
-
-## Configuration
-
-The workflow is intended to use credentials configured securely inside n8n:
-
-- HubSpot private app access token
-- OpenAI API key
-
-**Never commit API keys, access tokens, passwords, webhook secrets, customer records, or credential exports.** Use n8n credentials or environment variables for secrets. Replace any exposed credential immediately.
-
-## Current Development Focus
-
-- [x] Receive lead data through a webhook
-- [x] Normalize and validate incoming lead fields
-- [x] Search HubSpot contacts by email to detect duplicates
-- [x] Generate an AI-based lead score and priority in development testing
-- [ ] Finalize reliable create/update behavior for existing and new contacts
-- [ ] Add clear error handling and execution logging
-- [ ] Test edge cases with synthetic leads
-- [ ] Publish a sanitized workflow export and setup guide
+This diagram represents the intended processing path. See the setup guide for limitations in the current export.
 
 ## Repository Contents
 
-The repository currently contains project documentation. A sanitized n8n workflow export and reproducible setup instructions will be added after they have been reviewed to remove credentials, private URLs, and personal/customer data.
+- [Sanitized n8n workflow export](workflows/ai-powered-lead-management.json)
+- [Import, configuration, and testing guide](docs/setup.md)
+- [Architecture notes](docs/architecture.md)
+
+## Quick Start
+
+1. Import the JSON file into n8n.
+2. Reconnect your own HubSpot, OpenAI, and Gmail credentials.
+3. Replace the notification email placeholder in both Gmail nodes.
+4. Create or verify the required HubSpot contact properties.
+5. Review all known limitations and test with synthetic leads before activation.
+
+See [docs/setup.md](docs/setup.md) for complete instructions and a sample webhook payload.
+
+## Security
+
+The public export has had credential references, webhook IDs, instance metadata, and the original notification email removed. Credentials must be configured inside n8n.
+
+Never commit API keys, access tokens, passwords, private webhook URLs, customer records, or personal notification addresses. Use synthetic data in public examples.
 
 ## Disclaimer
 
