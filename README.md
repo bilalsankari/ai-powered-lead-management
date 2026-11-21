@@ -8,46 +8,46 @@ The complete solution has two connected workflows: a Telegram-facing **AI Sales 
 
 ## Complete system architecture
 
-```text
-Prospective customer
-       |
-       v
-    Telegram
-       |
-       v
-AI Sales Agent (n8n Chat/Agent workflow)
-       |
-       | collects details and qualifies the conversation
-       v
-Submit Qualified Lead (workflow tool)
-       |
-       v
-AI-Powered Lead Management System
-       |
-       +---- Webhook trigger (alternative direct intake)
-       |
-       v
-Normalize & Validate
-       |
-       v
-Search HubSpot by Email
-       |
-       v
-Create / Update Contact
-       |
-       v
-OpenAI Lead Evaluation
-       |
-       v
-Update HubSpot Properties
-       |
-       v
-Hot / Warm / Cold Routing
-       |          |          |
-       v          v          v
-Hot actions  Warm actions Cold actions
-Deal + task  Email + task Email + task
-+ email
+The diagram below shows the Telegram-facing AI Sales Agent, its connected model, memory and lead-submission tool, plus the downstream lead-management workflow and its alternative webhook entry point.
+
+```mermaid
+flowchart TD
+    C["Prospective Customer"] --> TG["Telegram Bot"]
+    TG --> T["Telegram Trigger"]
+    T --> E["Edit Fields"]
+    E --> AI["AI Sales Agent"]
+
+    AI -.-> LLM["OpenAI Chat Model"]
+    AI -.-> MEM["Simple Memory"]
+    AI -.-> TOOL["Submit Qualified Lead Tool"]
+
+    AI --> REPLY["Telegram Reply"]
+
+    TOOL --> SUB["AI-Powered Lead Management System"]
+    WH["Alternative: HTTP Webhook Intake"] --> SUB
+
+    SUB --> N["Normalize Lead Data"]
+    N --> V["Validate Lead"]
+    V --> VALID{"Lead Valid?"}
+    VALID -->|No| STOP["Stop: Invalid Lead"]
+    VALID -->|Yes| SEARCH["Search HubSpot by Email"]
+    SEARCH --> UPSERT["Create or Update Contact"]
+    UPSERT --> SCORE["OpenAI Lead Scoring"]
+    SCORE --> UPDATE["Update HubSpot Contact"]
+    UPDATE --> ROUTE{"Lead Score"}
+    ROUTE -->|80–100: Hot| HOT["Create Deal and Task"]
+    ROUTE -->|50–79: Warm| WARM["Create Task"]
+    ROUTE -->|0–49: Cold| COLD["Create Task"]
+    HOT --> HE["Hot Lead Email"]
+    WARM --> WE["Warm Lead Email"]
+    COLD --> CE["Cold Lead Email"]
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#111827
+    classDef ai fill:#ede9fe,stroke:#7c3aed,color:#111827
+    classDef crm fill:#dcfce7,stroke:#16a34a,color:#111827
+    class AI agent
+    class LLM,MEM,SCORE ai
+    class SEARCH,UPSERT,UPDATE crm
 ```
 
 The Telegram trigger belongs to the separate AI Sales Agent workflow. The lead-management workflow is called by that agent through its **Submit Qualified Lead** workflow tool / Execute Workflow integration. It also exposes a webhook for direct intake and independent testing.
