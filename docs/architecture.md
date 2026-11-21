@@ -117,3 +117,48 @@ The lead-management webhook path was functionally tested on November 21, 2026. T
 ## Telegram AI Sales Agent export notes
 
 The exported active path is Telegram Trigger → Edit Fields → AI Agent → Telegram reply. The OpenAI Chat Model, Simple Memory, and Submit Qualified Lead workflow tool are connected to the AI Agent. The `Extract Lead Information` and `Structured Output Parser` nodes are present in the supplied export but are not connected in its connection graph. Also, the tool's configured source value is `website_chatbot`, despite Telegram being the trigger channel. This is preserved as supplied; update it to `telegram` in the live workflow if channel-accurate source attribution is desired. The downstream workflow ID is a placeholder in the public export and must be reselected after import.
+
+
+## Visual architecture diagram
+
+The editable Mermaid source is also available as [architecture.mmd](architecture.mmd).
+
+```mermaid
+flowchart TD
+    C["Prospective Customer"] --> TG["Telegram Bot"]
+    TG --> T["Telegram Trigger"]
+    T --> E["Edit Fields"]
+    E --> AI["AI Sales Agent"]
+
+    AI -.-> LLM["OpenAI Chat Model"]
+    AI -.-> MEM["Simple Memory"]
+    AI -.-> TOOL["Submit Qualified Lead Tool"]
+
+    AI --> REPLY["Telegram Reply"]
+
+    TOOL --> SUB["AI-Powered Lead Management System"]
+    WH["Alternative: HTTP Webhook Intake"] --> SUB
+
+    SUB --> N["Normalize Lead Data"]
+    N --> V["Validate Lead"]
+    V --> VALID{"Lead Valid?"}
+    VALID -->|No| STOP["Stop: Invalid Lead"]
+    VALID -->|Yes| SEARCH["Search HubSpot by Email"]
+    SEARCH --> UPSERT["Create or Update Contact"]
+    UPSERT --> SCORE["OpenAI Lead Scoring"]
+    SCORE --> UPDATE["Update HubSpot Contact"]
+    UPDATE --> ROUTE{"Lead Score"}
+    ROUTE -->|80–100: Hot| HOT["Create Deal and Task"]
+    ROUTE -->|50–79: Warm| WARM["Create Task"]
+    ROUTE -->|0–49: Cold| COLD["Create Task"]
+    HOT --> HE["Hot Lead Email"]
+    WARM --> WE["Warm Lead Email"]
+    COLD --> CE["Cold Lead Email"]
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#111827
+    classDef ai fill:#ede9fe,stroke:#7c3aed,color:#111827
+    classDef crm fill:#dcfce7,stroke:#16a34a,color:#111827
+    class AI agent
+    class LLM,MEM,SCORE ai
+    class SEARCH,UPSERT,UPDATE crm
+```
