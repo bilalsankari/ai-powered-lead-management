@@ -2,45 +2,58 @@
 
 ## Current status
 
-The live n8n workflow passed the functional tests listed in [Test Results](testing-results.md) on November 21, 2026.
+The lead-management workflow passed the webhook functional tests listed in [Test Results](testing-results.md) on November 21, 2026.
 
-**Important:** The JSON in `workflows/ai-powered-lead-management.json` is an earlier sanitized snapshot. It predates the final fixes and must not be treated as the latest tested workflow or imported as a ready-to-run production workflow. Export a fresh copy from the current n8n instance before relying on this repository for reproduction.
+**Important:** The JSON in `workflows/ai-powered-lead-management.json` is an earlier sanitized snapshot of the lead-management component. It predates the final fixes and does not include the separate Telegram AI Sales Agent workflow. It must not be treated as the complete Telegram-to-CRM system or as the latest tested import.
 
 ## Requirements
 
 - A working n8n instance
-- HubSpot private app/service-key credentials with permissions for contacts, deals, and tasks
+- Telegram bot credentials and a configured Telegram trigger for the AI Sales Agent
 - OpenAI API credentials
+- HubSpot private app/service-key credentials with permissions for contacts, deals, and tasks
 - Gmail OAuth credentials if email notifications are enabled
 - The HubSpot contact properties used by the workflow
 
-## Export the current tested workflow
+## Workflow components
 
-From the n8n instance containing the verified workflow:
+The complete solution uses two separate workflows:
 
-1. Open the completed workflow.
-2. Use the workflow menu to download/export the workflow JSON.
-3. Keep credentials and secrets out of the export.
-4. Replace the older file at `workflows/ai-powered-lead-management.json` with the fresh sanitized export.
-5. Before publishing, inspect the JSON for tokens, credential data, private webhook URLs, personal email addresses, and customer data.
+1. **AI Sales Agent:** receives customer messages through Telegram, gathers lead details, and calls the **Submit Qualified Lead** workflow tool.
+2. **AI-Powered Lead Management System:** receives the submitted workflow inputs through its **When Executed by Another Workflow** trigger. It also has a direct HTTP Webhook trigger for alternative intake and testing.
 
-Do not upload an unredacted workflow export.
+The Telegram trigger is in the AI Sales Agent workflow, not in the lead-management workflow export stored in this repository.
+
+## Export the current workflows
+
+From the n8n instance containing the workflows:
+
+1. Export the AI Sales Agent workflow.
+2. Export the AI-Powered Lead Management System workflow.
+3. Keep credentials and secrets out of both exports.
+4. Sanitize both exports before publishing: remove credential references, webhook IDs, instance metadata, private URLs, personal email addresses, and customer/test data.
+5. Add the two sanitized exports to the repository with clear filenames, for example `workflows/ai-sales-agent-telegram.json` and `workflows/ai-powered-lead-management.json`.
+6. Inspect the final files to confirm that no tokens, credential data, private webhook URLs, or personal information remain.
+
+Do not upload unredacted workflow exports.
 
 ## Import and configure
 
-When a current sanitized export is available:
+When current sanitized exports are available:
 
-1. In n8n, choose **Import from File**.
-2. Keep the imported workflow inactive while configuring it.
-3. Reconnect your own HubSpot, OpenAI, and Gmail credentials.
-4. Set your own notification recipient in the Gmail nodes.
-5. Verify HubSpot custom properties and deal pipeline/stage settings.
-6. Review the webhook and sub-workflow trigger mappings. In particular, map webhook values from `$json.body.*` and sub-workflow values from their top-level input fields, or use a tested normalization expression that handles both. The sub-workflow trigger path in the supplied export has not been verified.
-7. This workflow does not include Telegram integration; configure a separate Telegram trigger/agent workflow if Telegram intake is required.
+1. In n8n, import both workflows.
+2. Keep them inactive while configuring.
+3. Reconnect your own Telegram, HubSpot, OpenAI, and Gmail credentials.
+4. Configure the Telegram trigger and verify the bot can receive messages.
+5. Configure the AI Sales Agent's **Submit Qualified Lead** tool to call the lead-management workflow.
+6. Confirm that the downstream workflow input names and types match the tool's defined fields (for example, `name`, `email`, `phone`, `company`, `service_needed`, `budget`, `message`, and `source`).
+7. Verify that the lead-management normalization maps both webhook request-body fields and top-level sub-workflow input fields correctly.
+8. Verify HubSpot custom properties and deal pipeline/stage settings.
+9. Test the Telegram-to-agent-to-subworkflow path end-to-end with synthetic lead details.
 
-## Expected webhook payload
+## Example direct webhook payload
 
-Example synthetic payload:
+The lead-management workflow can also be tested independently through its webhook using a synthetic JSON payload:
 
 ```json
 {
@@ -80,8 +93,9 @@ Use synthetic lead data and confirm:
 4. Warm scores (50–79) send an email and create a medium-priority task.
 5. Cold scores (0–49) send an email and create a low-priority task.
 6. Tasks and deals are associated with the intended contact.
+7. The Telegram AI Sales Agent collects lead details and successfully hands them to the lead-management workflow.
 
-See [Test Results](testing-results.md) for the tests already completed on the developer's local instance.
+The webhook lead-management scenarios have been completed on the developer's local instance. Do not mark the Telegram handoff test as complete until it has been separately run and confirmed.
 
 ## Production checklist
 
@@ -89,7 +103,7 @@ Before using this with real customer submissions:
 
 - Configure error handling and retry behavior for external API failures.
 - Add execution monitoring and alerting.
-- Secure the n8n instance and webhook endpoints.
+- Secure the n8n instance, Telegram bot, and webhook endpoints.
 - Confirm data retention and privacy requirements.
 - Test rate limits and failure scenarios.
 - Keep credentials outside workflow exports and source control.
