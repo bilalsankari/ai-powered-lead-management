@@ -35,7 +35,8 @@ When a current sanitized export is available:
 3. Reconnect your own HubSpot, OpenAI, and Gmail credentials.
 4. Set your own notification recipient in the Gmail nodes.
 5. Verify HubSpot custom properties and deal pipeline/stage settings.
-6. Review the webhook and sub-workflow trigger mappings.
+6. Review the webhook and sub-workflow trigger mappings. In particular, map webhook values from `$json.body.*` and sub-workflow values from their top-level input fields, or use a tested normalization expression that handles both. The sub-workflow trigger path in the supplied export has not been verified.
+7. This workflow does not include Telegram integration; configure a separate Telegram trigger/agent workflow if Telegram intake is required.
 
 ## Expected webhook payload
 
