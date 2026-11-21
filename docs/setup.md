@@ -22,7 +22,7 @@ The complete solution uses two separate workflows:
 1. **AI Sales Agent:** receives customer messages through Telegram, gathers lead details, and calls the **Submit Qualified Lead** workflow tool.
 2. **AI-Powered Lead Management System:** receives the submitted workflow inputs through its **When Executed by Another Workflow** trigger. It also has a direct HTTP Webhook trigger for alternative intake and testing.
 
-The Telegram trigger is in the AI Sales Agent workflow, not in the lead-management workflow export stored in this repository.
+The Telegram trigger is in the AI Sales Agent workflow, not in the lead-management workflow. A sanitized reference export is now stored at [workflows/ai-sales-agent-telegram.json](../workflows/ai-sales-agent-telegram.json).
 
 ## Export the current workflows
 
@@ -32,7 +32,7 @@ From the n8n instance containing the workflows:
 2. Export the AI-Powered Lead Management System workflow.
 3. Keep credentials and secrets out of both exports.
 4. Sanitize both exports before publishing: remove credential references, webhook IDs, instance metadata, private URLs, personal email addresses, and customer/test data.
-5. Add the two sanitized exports to the repository with clear filenames, for example `workflows/ai-sales-agent-telegram.json` and `workflows/ai-powered-lead-management.json`.
+5. The sanitized AI Sales Agent reference export is already present as `workflows/ai-sales-agent-telegram.json`. Refresh `workflows/ai-powered-lead-management.json` from the latest live workflow before treating the repository as a fully current, reproducible package.
 6. Inspect the final files to confirm that no tokens, credential data, private webhook URLs, or personal information remain.
 
 Do not upload unredacted workflow exports.
@@ -107,3 +107,8 @@ Before using this with real customer submissions:
 - Confirm data retention and privacy requirements.
 - Test rate limits and failure scenarios.
 - Keep credentials outside workflow exports and source control.
+
+
+## Telegram workflow export notes
+
+The public AI Sales Agent JSON has no Telegram/OpenAI credential references or webhook IDs. Its downstream workflow ID is replaced with `REPLACE_WITH_LEAD_MANAGEMENT_WORKFLOW_ID`; after importing, select the actual AI-Powered Lead Management System workflow in the Submit Qualified Lead node. The supplied graph also contains two disconnected nodes (`Extract Lead Information` and `Structured Output Parser`), which are not part of the active connected path. The source field is currently configured as `website_chatbot`; change the tool and extraction instructions to `telegram` if you want Telegram leads labeled accurately in HubSpot.
