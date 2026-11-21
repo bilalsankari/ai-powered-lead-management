@@ -1,94 +1,92 @@
 # AI-Powered Lead Management System
 
-An AI-assisted lead intake and CRM automation project built with **n8n**, **OpenAI**, and **HubSpot**.
+An AI-assisted lead intake and CRM automation built with **n8n**, **OpenAI**, and **HubSpot**.
 
-The goal is to help businesses process incoming leads more consistently by validating contact data, checking for existing contacts, evaluating lead quality, and keeping CRM records organized.
+The workflow receives lead submissions, validates the data, checks for an existing HubSpot contact, uses AI to score and classify the lead, updates CRM properties, and triggers the appropriate sales follow-up actions.
 
-> **Project status: In development.** A sanitized workflow export and setup guide are included for review and testing. The export has not been re-tested end-to-end after sanitization and is not production-ready.
+> **Project status: Functionally tested.** On November 21, 2026, the working n8n workflow was tested with invalid input, a repeated email address, and Hot, Warm, and Cold lead scenarios. Email notifications and HubSpot tasks were confirmed; the Hot path also created a HubSpot deal. This is a local test result, not a claim of production deployment.
 
-## Overview
+## What it does
 
-The current workflow export includes:
+1. **Lead intake** — accepts lead details through an n8n webhook.
+2. **Validation** — checks required information and rejects invalid email addresses or incomplete data.
+3. **Duplicate protection** — searches HubSpot by email and updates an existing contact rather than creating a second contact.
+4. **AI qualification** — evaluates budget, buying intent, clarity, and urgency, then returns a score and sales recommendation.
+5. **CRM enrichment** — stores lead score, priority, AI reasoning, and recommended action in HubSpot.
+6. **Automated routing** — sends leads into Hot, Warm, or Cold follow-up paths.
+7. **Sales actions** — sends Gmail notifications and creates HubSpot tasks; the Hot path also creates a deal.
 
-1. Lead intake through an n8n webhook or sub-workflow trigger.
-2. Lead field normalization and validation.
-3. HubSpot contact search by email.
-4. Contact create/update handling.
-5. AI-based lead scoring and priority classification.
-6. HubSpot contact-property updates.
-7. Hot/cold email notifications, task creation, and hot-lead deal creation.
+## Lead scoring
 
-Some branches and CRM ID mappings still require fixes; see [Known Limitations](docs/setup.md#known-limitations-to-resolve-before-production).
+| Category | Score | Automated actions |
+|---|---:|---|
+| Hot | 80–100 | Gmail notification, high-priority HubSpot task, HubSpot deal |
+| Warm | 50–79 | Gmail notification, medium-priority HubSpot task |
+| Cold | 0–49 | Gmail notification, low-priority HubSpot task |
 
-## Technology Stack
+## Technology stack
 
-| Technology | Role |
-|---|---|
-| n8n | Workflow orchestration |
-| OpenAI API | AI-assisted lead evaluation |
-| HubSpot CRM | Contacts, deals, tasks, and qualification properties |
-| JavaScript | Data normalization and validation |
-| REST APIs / JSON | Service integrations and data exchange |
-| Webhooks | Lead intake |
+- **Workflow automation:** n8n
+- **AI:** OpenAI API
+- **CRM:** HubSpot
+- **Notifications:** Gmail
+- **Logic and transformation:** JavaScript
+- **Integration:** REST APIs, JSON, webhooks
 
 ## Architecture
 
 ```text
-Webhook / Sub-workflow Trigger
-          |
-          v
-     Edit Fields
-          |
-          v
-   Validate Lead
-          |
-          v
-   Search HubSpot
-          |
-          v
- Create / Update Contact
-          |
-          v
-   OpenAI Evaluation
-          |
-          v
- Update CRM Properties
-          |
-          v
- Hot / Warm / Cold Routing
+Lead Webhook
+    |
+    v
+Normalize & Validate
+    |
+    v
+Search HubSpot by Email
+    |
+    v
+Create / Update Contact
+    |
+    v
+OpenAI Lead Evaluation
+    |
+    v
+Update HubSpot Properties
+    |
+    v
+Hot / Warm / Cold Routing
+    |          |          |
+    v          v          v
+Hot actions  Warm actions Cold actions
+Deal + task  Email + task Email + task
++ email
 ```
 
-This diagram represents the intended processing path. See the setup guide for limitations in the current export.
+See [Architecture](docs/architecture.md) for more detail.
 
-## Repository Contents
+## Repository contents
 
-- [Sanitized n8n workflow export](workflows/ai-powered-lead-management.json)
-- [Import, configuration, and testing guide](docs/setup.md)
+- [n8n workflow export](workflows/ai-powered-lead-management.json)
+- [Setup and import guide](docs/setup.md)
 - [Architecture notes](docs/architecture.md)
+- [Test results](docs/testing-results.md)
 
-## Quick Start
+### Important note about the workflow export
 
-1. Import the JSON file into n8n.
-2. Reconnect your own HubSpot, OpenAI, and Gmail credentials.
-3. Replace the notification email placeholder in both Gmail nodes.
-4. Create or verify the required HubSpot contact properties.
-5. Review all known limitations and test with synthetic leads before activation.
-
-See [docs/setup.md](docs/setup.md) for complete instructions and a sample webhook payload.
+The JSON currently in `workflows/` is an earlier sanitized snapshot and does **not** include all fixes made and verified in the live n8n workflow on November 21, 2026. Use it as a structural reference only, not as the latest tested import. A fresh export from the current n8n workflow is still needed before this repository can offer a fully reproducible import.
 
 ## Security
 
-The public export has had credential references, webhook IDs, instance metadata, and the original notification email removed. Credentials must be configured inside n8n.
+The public workflow snapshot has had credential references, webhook IDs, instance metadata, and personal notification addresses removed. Configure your own credentials inside n8n.
 
 Never commit API keys, access tokens, passwords, private webhook URLs, customer records, or personal notification addresses. Use synthetic data in public examples.
 
-## Disclaimer
+## Production considerations
 
-This is a portfolio and learning project under active development. It is not presented as a production-ready CRM integration. Validate the workflow, API permissions, error handling, and data-protection requirements before using it with real customer data.
+The workflow has passed the functional scenarios documented in [Test Results](docs/testing-results.md), but it has not been represented as a production deployment. Before using it with real customers, add/verify error handling, retries, monitoring, secure hosting, data-retention practices, and deployment reliability.
 
 ## Author
 
-**Bilal Sankari**  
-AI Automation Developer
+**Bilal Sankari** — AI Automation Developer
 
 - GitHub: [@bilalsankari](https://github.com/bilalsankari)
