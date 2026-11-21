@@ -4,7 +4,7 @@ An AI-assisted lead intake and CRM automation built with **n8n**, **OpenAI**, **
 
 The complete solution has two connected workflows: a Telegram-facing **AI Sales Agent** that converses with prospective customers, and a **Lead Management** sub-workflow that validates, scores, and manages qualified leads in HubSpot. The lead-management workflow can also accept submissions directly through its webhook.
 
-> **Project status: Functionally tested.** The lead-management webhook path was tested with invalid input, a repeated email address, and Hot, Warm, and Cold lead scenarios. Email notifications and HubSpot tasks were confirmed; the Hot path also created a HubSpot deal. The Telegram AI Sales Agent is a separate entry-point workflow that calls the lead-management workflow. Do not interpret the lead-management workflow JSON alone as containing the Telegram trigger.
+> **Project status: Functionally tested.** The lead-management webhook path was tested with invalid input, a repeated email address, and Hot, Warm, and Cold lead scenarios. Email notifications and HubSpot tasks were confirmed; the Hot path also created a HubSpot deal. The Telegram AI Sales Agent is a separate entry-point workflow that calls the lead-management workflow. Its sanitized reference export is included in `workflows/ai-sales-agent-telegram.json`. Do not interpret the lead-management workflow JSON alone as containing the Telegram trigger.
 
 ## Complete system architecture
 
@@ -83,6 +83,7 @@ The Telegram trigger belongs to the separate AI Sales Agent workflow. The lead-m
 
 ## Repository contents
 
+- [Telegram AI Sales Agent workflow export](workflows/ai-sales-agent-telegram.json)
 - [n8n lead-management workflow export](workflows/ai-powered-lead-management.json)
 - [Setup and import guide](docs/setup.md)
 - [Architecture notes](docs/architecture.md)
@@ -92,11 +93,11 @@ The Telegram trigger belongs to the separate AI Sales Agent workflow. The lead-m
 
 The **complete solution** is Telegram-triggered through the separate AI Sales Agent workflow, which hands qualified lead data to this lead-management workflow using its **Submit Qualified Lead** tool / Execute Workflow trigger. The lead-management workflow also has a direct HTTP Webhook trigger.
 
-The JSON currently in `workflows/` is an earlier sanitized snapshot of the lead-management workflow. It does not include the separate Telegram AI Sales Agent workflow and does not include all fixes made and verified in the live n8n workflow on November 21, 2026. Treat it as a structural reference, not as a complete export of the entire Telegram-to-CRM system or the latest tested import. A fresh sanitized export of both workflows is still needed for full reproducibility.
+The JSON currently in `workflows/` is an earlier sanitized snapshot of the lead-management workflow. It does not include the separate Telegram AI Sales Agent workflow and does not include all fixes made and verified in the live n8n workflow on November 21, 2026. Treat it as a structural reference, not as a complete export of the entire Telegram-to-CRM system or the latest tested import. A sanitized Telegram AI Sales Agent reference export is now included. The lead-management JSON remains an earlier snapshot and still needs a fresh export before the two files together can be treated as a fully reproducible, current system.
 
 ## Security
 
-The public workflow snapshot has had credential references, webhook IDs, instance metadata, and personal notification addresses removed. Configure your own credentials inside n8n.
+The public workflow snapshots have had credential references, Telegram/webhook IDs, instance metadata, and personal notification addresses removed. The AI Sales Agent export replaces the downstream workflow ID with a setup placeholder; select your imported lead-management workflow after importing. Configure your own credentials inside n8n.
 
 Never commit API keys, access tokens, passwords, private webhook URLs, customer records, or personal notification addresses. Use synthetic data in public examples.
 
@@ -109,3 +110,8 @@ The lead-management workflow has passed the functional scenarios documented in [
 **Bilal Sankari** — AI Automation Developer
 
 - GitHub: [@bilalsankari](https://github.com/bilalsankari)
+
+
+### Notes on the Telegram workflow export
+
+The supplied export contains two additional nodes (`Extract Lead Information` and `Structured Output Parser`) that are not connected in the exported workflow graph. The active path shown by the connections runs from Telegram Trigger → Edit Fields → AI Agent → Telegram reply, with OpenAI, memory, and Submit Qualified Lead attached to the agent. The configured lead source is `website_chatbot` even though the transport trigger is Telegram; change it to `telegram` in n8n if you want CRM source reporting to reflect the actual channel. The export is a sanitized reference, not a tested portable import: reconnect credentials and select the downstream workflow after import.
