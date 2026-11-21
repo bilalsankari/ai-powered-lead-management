@@ -1,14 +1,63 @@
 # Architecture
 
-## Overview
+## Complete system overview
 
-The AI-Powered Lead Management System is an n8n workflow that automates lead intake, validation, CRM contact handling, AI qualification, and sales follow-up.
+The solution is made up of two connected n8n workflows:
 
-## Processing flow
+1. **AI Sales Agent** — the customer-facing conversational workflow. A prospect starts the conversation through Telegram. The AI agent gathers the lead details and, when ready, calls the **Submit Qualified Lead** workflow tool.
+2. **AI-Powered Lead Management System** — the downstream workflow that validates the submitted data, checks HubSpot for an existing contact, performs AI lead scoring, updates CRM properties, and creates the appropriate follow-up actions.
 
-1. **Webhook intake** receives a JSON lead submission.
-2. **Edit Fields / normalization** maps incoming values into a consistent structure.
-3. **Validate Lead** checks the name, email, phone, and budget. Invalid submissions are stopped before CRM processing.
+The lead-management workflow also exposes an HTTP Webhook trigger for direct lead intake and independent testing. Therefore, Telegram is the entry point for the complete conversational solution, while the webhook is an alternative entry point into the lead-management component.
+
+## End-to-end flow
+
+```text
+Prospect
+   |
+   v
+Telegram
+   |
+   v
+AI Sales Agent (n8n)
+   |
+   | gathers lead details
+   v
+Submit Qualified Lead (workflow tool)
+   |
+   v
+Lead Management workflow
+   |
+   +---- Webhook trigger (alternative direct intake)
+   |
+   v
+Normalize / Validate
+   |
+   v
+HubSpot contact search by email
+   |
+   v
+Create or update contact
+   |
+   v
+OpenAI lead evaluation
+   |
+   v
+Update HubSpot qualification properties
+   |
+   v
+Hot / Warm / Cold routing
+   |             |             |
+   v             v             v
+Hot actions   Warm actions   Cold actions
+Deal + task   Email + task   Email + task
++ email
+```
+
+## Lead-management processing flow
+
+1. **Intake** receives lead details from the AI Sales Agent's workflow tool or from the direct webhook.
+2. **Normalization** maps incoming values into a consistent structure.
+3. **Validate Lead** checks the name, email, phone, and budget. Invalid submissions stop before CRM processing.
 4. **HubSpot contact search** searches by email.
 5. **Contact Exists? / Create or Update a Contact** ensures the lead is represented by one CRM contact. A repeated email updates the existing record rather than creating a duplicate.
 6. **OpenAI evaluation** assesses budget, buying intent, clarity, and urgency. The model returns a numeric score, priority, reason, and recommended action.
@@ -25,15 +74,16 @@ The AI-Powered Lead Management System is an n8n workflow that automates lead int
 
 ## Integrations
 
-- **n8n:** workflow orchestration and JavaScript transformations
-- **OpenAI API:** AI-assisted qualification
+- **Telegram:** prospect-facing chat channel for the AI Sales Agent
+- **n8n:** agent orchestration, workflow execution, and JavaScript transformations
+- **OpenAI API:** conversational intelligence and lead qualification
 - **HubSpot CRM:** contacts, custom qualification properties, deals, and tasks
 - **Gmail:** internal sales notifications
-- **Webhook / REST API:** external lead intake and service communication
+- **Webhook / REST API:** alternative direct lead intake and service communication
 
-## Data contract
+## Lead data contract
 
-The webhook accepts these fields:
+The lead-management workflow uses these fields where supplied:
 
 - `name`
 - `email`
@@ -45,11 +95,15 @@ The webhook accepts these fields:
 - `source`
 - `project_timeline`
 
-This workflow includes both a Webhook trigger and a When Executed by Another Workflow trigger. The current Edit Fields expressions in the supplied export read most values from `$json.body.*`, which matches webhook payloads but not the usual top-level input fields from an Execute Workflow trigger. Therefore, the sub-workflow trigger path needs a separate mapping fix and test before it can be described as verified. There are no Telegram nodes in this workflow export.
+The webhook receives values in the request body. The AI Sales Agent's workflow tool passes defined workflow inputs to the downstream workflow. These trigger shapes are different, so the lead-management workflow's normalization/mapping must handle both input structures. The webhook path has been functionally tested; the sub-workflow handoff should be separately verified before claiming that every trigger path is tested.
+
+## Workflow export scope
+
+The file `workflows/ai-powered-lead-management.json` is an export of the **lead-management component only**. It does not contain the Telegram trigger or the AI Sales Agent nodes because those belong to the separate upstream workflow. A complete reproducible project should include sanitized exports of both workflows.
 
 ## Test evidence
 
-The working local workflow was functionally tested on November 21, 2026. The scenarios and observed results are recorded in [Test Results](testing-results.md).
+The lead-management webhook path was functionally tested on November 21, 2026. The scenarios and observed results are recorded in [Test Results](testing-results.md). Do not treat those webhook tests as proof that the Telegram-to-subworkflow handoff was independently tested.
 
 ## Security and reliability
 
